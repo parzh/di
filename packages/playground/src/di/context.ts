@@ -1,5 +1,13 @@
 import { ObjectRegistry } from './object-registry.js'
 
+class Logger {
+  constructor(protected readonly id: number) {}
+
+  log(...args: Parameters<typeof global.console['log']>): void {
+    console.log(`[${this.id}]`, ...args)
+  }
+}
+
 export interface ConstructorOf<Consumer extends object, Dependencies extends readonly object[]> {
   new(...dependencies: Dependencies): Consumer
 }
@@ -7,11 +15,18 @@ export interface ConstructorOf<Consumer extends object, Dependencies extends rea
 type InjectionUnknown = ConstructorOf<object, never>
 
 export class Context {
+  static #instanceCount = 0
+  protected static createId = () => this.#instanceCount += 1
+
+  protected readonly id = Context.createId()
+  protected readonly logger = new Logger(this.id)
   protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorOf<object, never>, InjectionUnknown[]>()
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
   register(entityConstructor: ConstructorOf<object, never>): this {
+    this.logger.log(`Registering "${entityConstructor.name}" …`)
+
     if (!this.registry.hasObjectCreator(entityConstructor)) {
       this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never))
     }
@@ -36,6 +51,8 @@ export class Context {
     parameterIndex: ParameterIndex,
     injection: ConstructorOf<Dependency, never>,
   ): this {
+    this.logger.log(`Injecting "${injection.name}" into "${consumerConstructor.name}" at index ${parameterIndex} …`)
+
     const injections = this.getInjections(consumerConstructor)
     const existingInjection = injections[parameterIndex]
 
@@ -58,6 +75,8 @@ export class Context {
   >(
     consumerConstructor: ConstructorOf<Consumer, Dependencies>,
   ): Promise<Dependencies> {
+    this.logger.log(`Resolving dependencies for "${consumerConstructor.name}" …`)
+
     const injections = this.getInjections(consumerConstructor)
     const dependencies: object[] = []
 
@@ -82,8 +101,12 @@ export class Context {
   >(
     instanceConstructor: ConstructorOf<Instance, Dependencies>,
   ): Promise<Instance> {
+    this.logger.log(`Resolving "${instanceConstructor.name}" …`)
+
     if (!this.registry.hasObject(instanceConstructor)) {
       const dependencies = await this.resolveDependencies(instanceConstructor)
+
+      this.logger.log(`Preparing instance of "${instanceConstructor.name}" …`)
 
       await this.registry.prepareObject(instanceConstructor, dependencies)
     }
