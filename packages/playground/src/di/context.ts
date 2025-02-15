@@ -1,15 +1,15 @@
 import { ConstructorOf } from './constructor-of.type.js'
-import { InstanceRegistry } from './instance-registry.js'
+import { ObjectRegistry } from './object-registry.js'
 
 type InjectionUnknown = ConstructorOf<object, never>
 
 export class Context {
   protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorOf<object, never>, InjectionUnknown[]>()
 
-  constructor(protected readonly registry = new InstanceRegistry()) { }
+  constructor(protected readonly registry = new ObjectRegistry()) { }
 
   register(entityConstructor: ConstructorOf<object, never>): this {
-    if (this.registry.hasInstanceCreator(entityConstructor)) {
+    if (this.registry.hasObjectCreator(entityConstructor)) {
       throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as an injectable`)
     }
 
@@ -18,7 +18,7 @@ export class Context {
       throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as a consumer`)
     }
 
-    this.registry.addInstanceCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies))
+    this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies))
     this.consumerConstructorToInjectionsMap.set(entityConstructor, [])
 
     return this
@@ -87,13 +87,13 @@ export class Context {
   >(
     instanceConstructor: ConstructorOf<Instance, Dependencies>,
   ): Promise<Instance> {
-    if (!this.registry.hasInstance(instanceConstructor)) {
+    if (!this.registry.hasObject(instanceConstructor)) {
       const dependencies = await this.resolveDependencies(instanceConstructor)
 
-      await this.registry.prepareInstance(instanceConstructor, dependencies)
+      await this.registry.prepareObject(instanceConstructor, dependencies)
     }
 
-    const instance = this.registry.getInstance(instanceConstructor)
+    const instance = this.registry.getObject(instanceConstructor)
 
     return instance
   }
