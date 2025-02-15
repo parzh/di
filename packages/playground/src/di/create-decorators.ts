@@ -8,24 +8,31 @@ export interface Program {
   run(): MaybePromise<void>
 }
 
-export function createDecorators(context: Context) {
-  return {
-    Instance: () => (constructor: ConstructorUnknown) => {
-      context.register(constructor)
-    },
+type RegistrationDecoratorFactory = () => (constructor: ConstructorUnknown) => void
+type InjectionDecoratorFactory = (Dependency: ConstructorUnknown) => ParameterDecorator
 
-    Singleton: (Dependency: ConstructorUnknown): ParameterDecorator => (Consumer, methodName, parameterIndex) => {
-      if (methodName !== undefined) {
-        throw new Error('@Singleton(…) decorator must be used on constructor parameters')
-      }
-
-      context.inject(Consumer as ConsumerConstructor, parameterIndex, Dependency)
-    },
-
-    bootstrap: async (programConstructor: ConstructorOf<Program, never>): Promise<void> => {
-      const program = await context.instantiate(programConstructor)
-
-      await program.run()
-    },
-  }
+interface ContextDecorators {
+  Instance: RegistrationDecoratorFactory
+  Singleton: InjectionDecoratorFactory
+  bootstrap(Program: ConstructorOf<Program, never>): Promise<void>
 }
+
+export const createDecorators = (context: Context): ContextDecorators => ({
+  Instance: () => (constructor) => {
+    context.register(constructor)
+  },
+
+  Singleton: (Dependency) => (Consumer, key, parameterIndex) => {
+    if (key !== undefined) {
+      throw new Error('Injection decorator must be used on constructor parameters')
+    }
+
+    context.inject(Consumer as ConsumerConstructor, parameterIndex, Dependency)
+  },
+
+  async bootstrap(programConstructor) {
+    const program = await context.instantiate(programConstructor)
+
+    await program.run()
+  },
+})
