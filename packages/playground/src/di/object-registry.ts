@@ -15,16 +15,6 @@ export class ObjectRegistry {
   protected readonly objectCreators = new Map<Token, ObjectCreator<object, never>>()
   protected readonly objects = new Map<Token, object>()
 
-  setObjectCreator<
-    O extends object,
-    Dependencies extends readonly object[],
-  >(
-    token: Token,
-    createObject: ObjectCreator<O, Dependencies>,
-  ): void {
-    this.objectCreators.set(token, createObject)
-  }
-
   hasObjectCreator(token: Token): boolean {
     return this.objectCreators.has(token)
   }
@@ -40,7 +30,7 @@ export class ObjectRegistry {
       throw new Error(`Cannot add object creator: object creator for "${read(token)}" already added`)
     }
 
-    this.setObjectCreator(token, createObject)
+    this.objectCreators.set(token, createObject)
   }
 
   hasObject(token: Token): boolean {
