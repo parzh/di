@@ -18,7 +18,7 @@ export class Context {
       throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as a consumer`)
     }
 
-    this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies))
+    this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never)) // TODO: explicit casting, too bad
     this.consumerConstructorToInjectionsMap.set(entityConstructor, [])
 
     return this
@@ -93,7 +93,7 @@ export class Context {
       await this.registry.prepareObject(instanceConstructor, dependencies)
     }
 
-    const instance = this.registry.getObject(instanceConstructor)
+    const instance = this.registry.getObject<Instance>(instanceConstructor)
 
     return instance
   }
