@@ -1,5 +1,8 @@
-import { ConstructorOf } from './constructor-of.type.js'
 import { ObjectRegistry } from './object-registry.js'
+
+export interface ConstructorOf<Consumer extends object, Dependencies extends readonly object[]> {
+  new(...dependencies: Dependencies): Consumer
+}
 
 type InjectionUnknown = ConstructorOf<object, never>
 
