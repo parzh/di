@@ -9,6 +9,16 @@ export class InstanceRegistry {
   protected readonly instanceCreators = new Map<ConstructorOf<object, never>, InstanceCreator>()
   protected readonly instances = new Map<ConstructorOf<object, never>, object>()
 
+  setInstanceCreator<
+    Instance extends object,
+    Dependencies extends readonly object[],
+  >(
+    constructor: ConstructorOf<Instance, Dependencies>,
+    createInstance: InstanceCreator<Instance, Dependencies>,
+  ): void {
+    this.instanceCreators.set(constructor, createInstance)
+  }
+
   hasInstanceCreator(constructor: ConstructorOf<object, never>): boolean {
     return this.instanceCreators.has(constructor)
   }
@@ -24,7 +34,7 @@ export class InstanceRegistry {
       throw new Error(`Cannot add instance creator: instance creator for "${constructor.name}" already added`)
     }
 
-    this.instanceCreators.set(constructor, createInstance)
+    this.setInstanceCreator(constructor, createInstance)
   }
 
   hasInstance(constructor: ConstructorOf<object, never>): boolean {
