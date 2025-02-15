@@ -6,7 +6,7 @@ function read(token: Token): string {
 }
 
 interface ObjectCreator<O extends object, Dependencies extends readonly object[]> {
-  (...deps: Dependencies): O | Promise<O>
+  (...deps: Dependencies): O | PromiseLike<O>
 }
 
 export class ObjectRegistry {
