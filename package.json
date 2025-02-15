@@ -1,0 +1,27 @@
+{
+  "name": "eco-monorepo-playground",
+  "version": "0.0.1",
+  "author": "Dmytro Parzhytskyi <parzhitsky@gmail.com>",
+  "private": true,
+  "repository": "https://github.com/eco-repositories/eco-monorepo-playground",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "play": "npm -w playground run dev",
+    "libs:init": "git submodule update --init --recursive",
+    "libs:install": "git submodule foreach \"npm ci\"",
+    "libs:build": "git submodule foreach \"npm run build -ws --if-present\""
+  },
+  "overrides": {
+    "@types/node": "$@types/node",
+    "vite": {
+      "esbuild": "$esbuild"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "esbuild": "0.21.5",
+    "typescript": "5.6.2"
+  }
+}

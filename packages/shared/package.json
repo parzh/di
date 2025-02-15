@@ -1,0 +1,35 @@
+{
+  "name": "shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": null,
+    "./*.js": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "test": "vitest",
+    "lint": "eslint \"**/*.ts\"",
+    "clean": "rm -rf dist/* ./*.tsbuildinfo",
+    "prebuild": "npm run clean",
+    "build": "tsc --project tsconfig.build.json",
+    "postbuild": "tsc-alias --project tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@nestjs/terminus": "10.2.3",
+    "@types/node": "*",
+    "@typescript-eslint/eslint-plugin": "7.16.0",
+    "@typescript-eslint/parser": "8.10.0",
+    "eslint": "8.57.0",
+    "eslint-config-standard-with-typescript": "40.0.0",
+    "eslint-plugin-import": "2.29.1",
+    "eslint-plugin-n": "17.9.0",
+    "eslint-plugin-promise": "6.2.0",
+    "tsc-alias": "1.8.10",
+    "typescript": "*",
+    "vitest": "2.0.5"
+  }
+}
