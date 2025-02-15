@@ -12,19 +12,16 @@ export class Context {
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
   register(entityConstructor: ConstructorOf<object, never>): this {
-    if (this.registry.hasObjectCreator(entityConstructor)) {
-      throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered`)
+    if (!this.registry.hasObjectCreator(entityConstructor)) {
+      this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never))
     }
-
-    this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never))
-    this.consumerConstructorToInjectionsMap.set(entityConstructor, [])
 
     return this
   }
 
-  protected getExistingInjections(consumerConstructor: ConstructorOf<object, never>): InjectionUnknown[] {
+  protected getInjections(consumerConstructor: ConstructorOf<object, never>): InjectionUnknown[] {
     if (!this.consumerConstructorToInjectionsMap.has(consumerConstructor)) {
-      throw new Error(`Cannot get injections: "${consumerConstructor.name}" is not registered as a consumer`)
+      this.consumerConstructorToInjectionsMap.set(consumerConstructor, [])
     }
 
     return this.consumerConstructorToInjectionsMap.get(consumerConstructor)!
@@ -39,7 +36,7 @@ export class Context {
     parameterIndex: ParameterIndex,
     injection: ConstructorOf<Dependency, never>,
   ): this {
-    const injections = this.getExistingInjections(consumerConstructor)
+    const injections = this.getInjections(consumerConstructor)
     const existingInjection = injections[parameterIndex]
 
     if (existingInjection) {
@@ -61,7 +58,7 @@ export class Context {
   >(
     consumerConstructor: ConstructorOf<Consumer, Dependencies>,
   ): Promise<Dependencies> {
-    const injections = this.getExistingInjections(consumerConstructor)
+    const injections = this.getInjections(consumerConstructor)
     const dependencies: object[] = []
 
     // can't use Promise.all(…): need to resolve in order
