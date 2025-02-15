@@ -1,3 +1,5 @@
+import { MaybePromise } from './maybe-promise.type.js'
+
 // We reasonably limit token types because we want to stringify them without heavy heuristics
 type Token = string | number | symbol | { readonly name: string }
 
@@ -6,7 +8,7 @@ function read(token: Token): string {
 }
 
 interface ObjectCreator<O extends object, Dependencies extends readonly object[]> {
-  (...deps: Dependencies): O | PromiseLike<O>
+  (...deps: Dependencies): MaybePromise<O>
 }
 
 export class ObjectRegistry {
