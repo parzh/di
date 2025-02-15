@@ -1,8 +1,12 @@
 import { ConstructorOf } from './constructor-of.type.js'
 import { MaybePromise } from './maybe-promise.type.js'
 
+interface InstanceCreator<Instance extends object = object, Dependencies extends readonly object[] = never> {
+  (...deps: Dependencies): MaybePromise<Instance>
+}
+
 export class InstanceRegistry {
-  protected readonly instanceCreators = new Map<ConstructorOf<object, never>, (...deps: never) => MaybePromise<object>>()
+  protected readonly instanceCreators = new Map<ConstructorOf<object, never>, InstanceCreator>()
   protected readonly instances = new Map<ConstructorOf<object, never>, object>()
 
   hasInstanceCreator(constructor: ConstructorOf<object, never>): boolean {
@@ -14,7 +18,7 @@ export class InstanceRegistry {
     Dependencies extends readonly object[],
   >(
     constructor: ConstructorOf<Instance, Dependencies>,
-    createInstance: (...dependencies: Dependencies) => MaybePromise<Instance>,
+    createInstance: InstanceCreator<Instance, Dependencies>,
   ): void {
     if (this.hasInstanceCreator(constructor)) {
       throw new Error(`Cannot add instance creator: instance creator for "${constructor.name}" already added`)
