@@ -1,12 +1,10 @@
 import { ConstructorOf } from './constructor-of.type.js'
 import { InstanceRegistry } from './instance-registry.js'
 
-type ConstructorsOf<Instances extends readonly object[]> = {
-  [Index in keyof Instances]: ConstructorOf<Instances[Index], never>
-}
+type InjectionUnknown = ConstructorOf<object, never>
 
 export class Context {
-  protected readonly consumerConstructorToDependencyConstructorsMap = new Map<ConstructorOf<object, never>, ConstructorsOf<object[]>>()
+  protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorOf<object, never>, InjectionUnknown[]>()
 
   constructor(protected readonly registry = new InstanceRegistry()) { }
 
@@ -16,22 +14,22 @@ export class Context {
     }
 
     // FIXME: condition is always false, branch is unreachable
-    if (this.consumerConstructorToDependencyConstructorsMap.has(entityConstructor)) {
+    if (this.consumerConstructorToInjectionsMap.has(entityConstructor)) {
       throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as a consumer`)
     }
 
     this.registry.addInstanceCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies))
-    this.consumerConstructorToDependencyConstructorsMap.set(entityConstructor, [])
+    this.consumerConstructorToInjectionsMap.set(entityConstructor, [])
 
     return this
   }
 
-  protected getExistingInjections(consumerConstructor: ConstructorOf<object, never>): ConstructorOf<object, never>[] {
-    if (!this.consumerConstructorToDependencyConstructorsMap.has(consumerConstructor)) {
+  protected getExistingInjections(consumerConstructor: ConstructorOf<object, never>): InjectionUnknown[] {
+    if (!this.consumerConstructorToInjectionsMap.has(consumerConstructor)) {
       throw new Error(`Cannot get injections: "${consumerConstructor.name}" is not registered as a consumer`)
     }
 
-    return this.consumerConstructorToDependencyConstructorsMap.get(consumerConstructor)!
+    return this.consumerConstructorToInjectionsMap.get(consumerConstructor)!
   }
 
   inject<
