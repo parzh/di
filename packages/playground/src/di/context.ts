@@ -10,12 +10,7 @@ export class Context {
 
   register(entityConstructor: ConstructorOf<object, never>): this {
     if (this.registry.hasObjectCreator(entityConstructor)) {
-      throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as an injectable`)
-    }
-
-    // FIXME: condition is always false, branch is unreachable
-    if (this.consumerConstructorToInjectionsMap.has(entityConstructor)) {
-      throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered as a consumer`)
+      throw new Error(`Cannot register entity: "${entityConstructor.name}" is already registered`)
     }
 
     this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never))
