@@ -1,4 +1,4 @@
-// We limit token types because we want to stringify them without heavy heuristics
+// We reasonably limit token types because we want to stringify them without heavy heuristics
 type Token = string | number | symbol | { readonly name: string }
 
 function read(token: Token): string {
