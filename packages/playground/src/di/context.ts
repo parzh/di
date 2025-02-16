@@ -1,7 +1,7 @@
 import { ObjectRegistry } from './object-registry.js'
 
 class Logger {
-  constructor(protected readonly id: number) {}
+  constructor(protected readonly id: number) { }
 
   log(...args: Parameters<typeof global.console['log']>): void {
     console.log(`[${this.id}]`, ...args)
@@ -51,17 +51,16 @@ export class Context {
     parameterIndex: ParameterIndex,
     injection: ConstructorOf<Dependency, never>,
   ): this {
-    this.logger.log(`Injecting "${injection.name}" into "${consumerConstructor.name}" at index ${parameterIndex} …`)
+    const consumer = consumerConstructor.name
+    const injected = injection.name
+
+    this.logger.log(`Injecting "${injected}" into "${consumer}" at index ${parameterIndex} …`)
 
     const injections = this.getInjections(consumerConstructor)
     const existingInjection = injections[parameterIndex]
 
     if (existingInjection) {
-      const consumer = consumerConstructor.name
-      const injected = injection.name
-      const existing = existingInjection.name
-
-      throw new Error(`Cannot inject "${injected}": consumer "${consumer}" already injects "${existing}" at index ${parameterIndex}`)
+      throw new Error(`Cannot inject "${injected}": consumer "${consumer}" already injects "${existingInjection.name}" at index ${parameterIndex}`)
     }
 
     injections[parameterIndex] = injection

@@ -19,10 +19,7 @@ export class ObjectRegistry {
     return this.objectCreators.has(token)
   }
 
-  addObjectCreator<
-    O extends object,
-    Dependencies extends readonly object[],
-  >(
+  addObjectCreator<O extends object, Dependencies extends readonly object[]>(
     token: Token,
     createObject: ObjectCreator<O, Dependencies>,
   ): void {
@@ -37,9 +34,7 @@ export class ObjectRegistry {
     return this.objects.has(token)
   }
 
-  async prepareObject<
-    Dependencies extends readonly object[],
-  >(
+  async prepareObject<Dependencies extends readonly object[]>(
     token: Token,
     dependencies: Dependencies,
   ): Promise<void> {
