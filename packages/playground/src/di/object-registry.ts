@@ -7,7 +7,7 @@ function read(token: Token): string {
   return token instanceof Object ? token.name : token.toString()
 }
 
-interface ObjectCreator<O extends object, Dependencies extends readonly object[]> {
+interface ObjectCreator<O extends object, Dependencies extends readonly unknown[]> {
   (...deps: Dependencies): MaybePromise<O>
 }
 
