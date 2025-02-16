@@ -10,13 +10,24 @@ export interface Program {
 
 interface ContextDecorators {
   Instance: () => (constructor: ConstructorUnknown) => void
+
+  InstanceReplacement:
+    <Instance extends object, Dependencies extends readonly object[]>
+    (Original: ConstructorOf<Instance, Dependencies>) =>
+      (Replacement: ConstructorOf<Instance, Dependencies>) => void
+
   Singleton: (Dependency: ConstructorUnknown) => ParameterDecorator
+
   bootstrap(Program: ConstructorOf<Program, never>): Promise<void>
 }
 
 export const createDecorators = (context: Context): ContextDecorators => ({
   Instance: () => (constructor) => {
     context.register(constructor)
+  },
+
+  InstanceReplacement: (Original) => (Replacement) => {
+    context.replace(Original, Replacement)
   },
 
   Singleton: (Dependency) => (Consumer, key, parameterIndex) => {

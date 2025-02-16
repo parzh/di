@@ -21,6 +21,7 @@ export class Context {
   protected readonly id = Context.createId()
   protected readonly logger = new Logger(this.id)
   protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorOf<object, never>, InjectionUnknown[]>()
+  protected readonly replacements = new ObjectRegistry()
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
@@ -68,6 +69,23 @@ export class Context {
     return this
   }
 
+  replace<
+    Instance extends object,
+    Dependencies extends readonly object[],
+  >(
+    originalConstructor: ConstructorOf<Instance, Dependencies>,
+    replacementConstructor: ConstructorOf<Instance, Dependencies>,
+  ): this {
+    this.logger.log(`Replacing "${originalConstructor.name}" with "${replacementConstructor.name}" …`)
+
+    this.replacements.addObjectCreator(originalConstructor, async (...dependencies) => new replacementConstructor(...dependencies as Dependencies))
+
+    const injections = this.getInjections(originalConstructor)
+    this.consumerConstructorToInjectionsMap.set(replacementConstructor, injections)
+
+    return this
+  }
+
   protected async resolveDependencies<
     Consumer extends object,
     Dependencies extends readonly object[],
@@ -102,15 +120,23 @@ export class Context {
   ): Promise<Instance> {
     this.logger.log(`Resolving "${instanceConstructor.name}" …`)
 
-    if (!this.registry.hasObject(instanceConstructor)) {
+    let registry = this.registry
+
+    if (this.replacements.hasObjectCreator(instanceConstructor)) {
+      this.logger.log(`Found a replacement for "${instanceConstructor.name}"`)
+
+      registry = this.replacements
+    }
+
+    if (!registry.hasObject(instanceConstructor)) {
       const dependencies = await this.resolveDependencies(instanceConstructor)
 
       this.logger.log(`Preparing instance of "${instanceConstructor.name}" …`)
 
-      await this.registry.prepareObject(instanceConstructor, dependencies)
+      await registry.prepareObject(instanceConstructor, dependencies)
     }
 
-    const instance = this.registry.getObject<Instance>(instanceConstructor)
+    const instance = registry.getObject<Instance>(instanceConstructor)
 
     return instance
   }

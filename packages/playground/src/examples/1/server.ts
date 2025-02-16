@@ -8,6 +8,10 @@ export class Server {
     protected readonly logger: Logger,
   ) { }
 
+  establishTLS(): void {
+    this.logger.info('Secure connection established')
+  }
+
   listen(port: number): void {
     this.logger.info(`Server is listening on port ${port} (probably)`)
   }

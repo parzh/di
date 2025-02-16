@@ -5,7 +5,7 @@ import { ObjectRegistry } from './object-registry.js'
 const objectRegistry = new ObjectRegistry()
 const context = new Context(objectRegistry)
 
-export const { Instance, Singleton, bootstrap } = createDecorators(context)
+export const { Instance, InstanceReplacement, Singleton, bootstrap } = createDecorators(context)
 
 // Since ESM does not allow exporting an object as a set of named exports,
 // here is a compile-time test for the consistency of the above exports:

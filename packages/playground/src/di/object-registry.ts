@@ -30,6 +30,17 @@ export class ObjectRegistry {
     this.objectCreators.set(token, createObject)
   }
 
+  replaceObjectCreator(
+    token: Token,
+    createObject: ObjectCreator<object, never>,
+  ): void {
+    if (!this.hasObjectCreator(token)) {
+      throw new Error(`Cannot replace object creator: object creator for "${read(token)}" was not added`)
+    }
+
+    this.objectCreators.set(token, createObject)
+  }
+
   hasObject(token: Token): boolean {
     return this.objects.has(token)
   }
