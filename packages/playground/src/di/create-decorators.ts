@@ -8,10 +8,8 @@ export interface Program {
   run(): MaybePromise<void>
 }
 
-type RegistrationDecorator = (constructor: ConstructorUnknown) => void
-
 interface ContextDecorators {
-  Instance: () => RegistrationDecorator
+  Instance: () => (constructor: ConstructorUnknown) => void
   Singleton: (Dependency: ConstructorUnknown) => ParameterDecorator
   bootstrap(Program: ConstructorOf<Program, never>): Promise<void>
 }
