@@ -1,4 +1,4 @@
-import { Instance, Singleton } from '@/di/main.js'
+import { Instance, Singleton } from 'v1/di/main.js'
 import { Server } from './server.js'
 import { Config } from './config.js'
 import { Logger } from './logger.js'

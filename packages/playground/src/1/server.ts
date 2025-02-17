@@ -1,4 +1,4 @@
-import { Instance, Singleton } from '@/di/main.js'
+import { Instance, Singleton } from 'v1/di/main.js'
 import { Logger } from './logger.js'
 
 @Instance()

@@ -1,4 +1,4 @@
-import { Instance } from '@/di/main.js'
+import { Instance } from 'v1/di/main.js'
 
 @Instance()
 export class Config {

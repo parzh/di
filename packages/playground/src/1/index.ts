@@ -1,4 +1,4 @@
-import { bootstrap, InstanceReplacement } from '@/di/main.js'
+import { bootstrap, InstanceReplacement } from 'v1/di/main.js'
 import { App } from './app.js'
 import { Config } from './config.js'
 
