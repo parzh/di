@@ -18,4 +18,5 @@ declare function takesDecorators(decorators: ReturnType<typeof createDecorators>
 declare const exports: typeof import('./main.js')
 
 // 3. Don't actually run the function, but make sure it would work if it ran;
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions, no-constant-binary-expression
 false && takesDecorators(exports) // if this line says 'Property […] is missing', then the corresponding export is missing above
