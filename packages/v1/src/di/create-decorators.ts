@@ -10,7 +10,7 @@ export interface Program {
 interface ContextDecorators {
   Instance: () => (constructor: ConstructorUnknown) => void
 
-  InstanceReplacement:
+  Replacement:
     <Instance extends object, Dependencies extends readonly object[]>
     (Original: ConstructorOf<Instance, Dependencies>) =>
       (Replacement: ConstructorOf<Instance, Dependencies>) => void
@@ -22,10 +22,10 @@ interface ContextDecorators {
 
 export const createDecorators = (context: Context): ContextDecorators => ({
   Instance: () => (constructor) => {
-    context.register(constructor)
+    context.registerConstructor(constructor)
   },
 
-  InstanceReplacement: (Original) => (Replacement) => {
+  Replacement: (Original) => (Replacement) => {
     context.replace(Original, Replacement)
   },
 

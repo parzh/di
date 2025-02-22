@@ -27,7 +27,7 @@ export class Context {
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
-  register(Entity: ConstructorUnknown): this {
+  registerConstructor(Entity: ConstructorUnknown): this {
     this.logger.log(`Registering "${Entity.name}" …`)
 
     if (!this.registry.hasObjectCreator(Entity)) {
@@ -83,11 +83,9 @@ export class Context {
       throw new Error(`Cannot replace "${Instance.name}": it is already replaced by "${ExistingReplacement.name}"`)
     }
 
-    this.register(Replacement)
-    this.replacements.set(Instance, Replacement)
-
     const injections = this.getInjections(Instance)
 
+    this.replacements.set(Instance, Replacement)
     this.injections.set(Replacement, injections)
 
     return this
