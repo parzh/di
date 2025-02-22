@@ -22,7 +22,7 @@ export class Context {
 
   protected readonly id = Context.createId()
   protected readonly logger = new Logger(this.id)
-  protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorUnknown, Injections>()
+  protected readonly injections = new Map<ConstructorUnknown, Injections>()
   protected readonly replacements = new Map<ConstructorUnknown, ConstructorUnknown>()
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
@@ -38,11 +38,11 @@ export class Context {
   }
 
   protected getInjections(Consumer: ConstructorUnknown): Injections {
-    if (!this.consumerConstructorToInjectionsMap.has(Consumer)) {
-      this.consumerConstructorToInjectionsMap.set(Consumer, [])
+    if (!this.injections.has(Consumer)) {
+      this.injections.set(Consumer, [])
     }
 
-    return this.consumerConstructorToInjectionsMap.get(Consumer)!
+    return this.injections.get(Consumer)!
   }
 
   inject<
@@ -88,7 +88,7 @@ export class Context {
 
     const injections = this.getInjections(Instance)
 
-    this.consumerConstructorToInjectionsMap.set(Replacement, injections)
+    this.injections.set(Replacement, injections)
 
     return this
   }
