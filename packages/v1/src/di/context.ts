@@ -146,7 +146,7 @@ export class Context {
     return instance
   }
 
-  instantiate<Consumer extends object>(Consumer: ConstructorOf<Consumer, never>): Promise<Consumer> {
+  resolve<Consumer extends object>(Consumer: ConstructorOf<Consumer, never>): Promise<Consumer> {
     return this.resolveInstance(Consumer)
   }
 }

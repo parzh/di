@@ -11,9 +11,9 @@ interface ContextDecorators {
   Instance: () => (constructor: ConstructorUnknown) => void
 
   Replacement:
-    <Instance extends object, Dependencies extends readonly object[]>
+  <Instance extends object, Dependencies extends readonly object[]>
     (Original: ConstructorOf<Instance, Dependencies>) =>
-      (Replacement: ConstructorOf<Instance, Dependencies>) => void
+    (Replacement: ConstructorOf<Instance, Dependencies>) => void
 
   Singleton: (Dependency: ConstructorUnknown) => ParameterDecorator
 
@@ -38,7 +38,7 @@ export const createDecorators = (context: Context): ContextDecorators => ({
   },
 
   async bootstrap(Program) {
-    const program = await context.instantiate(Program)
+    const program = await context.resolve(Program)
 
     await program.run()
   },
