@@ -27,22 +27,22 @@ export class Context {
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
-  register(entityConstructor: ConstructorUnknown): this {
-    this.logger.log(`Registering "${entityConstructor.name}" …`)
+  register(Entity: ConstructorUnknown): this {
+    this.logger.log(`Registering "${Entity.name}" …`)
 
-    if (!this.registry.hasObjectCreator(entityConstructor)) {
-      this.registry.addObjectCreator(entityConstructor, async (...dependencies) => new entityConstructor(...dependencies as never))
+    if (!this.registry.hasObjectCreator(Entity)) {
+      this.registry.addObjectCreator(Entity, async (...dependencies) => new Entity(...dependencies as never))
     }
 
     return this
   }
 
-  protected getInjections(consumerConstructor: ConstructorUnknown): Injections {
-    if (!this.consumerConstructorToInjectionsMap.has(consumerConstructor)) {
-      this.consumerConstructorToInjectionsMap.set(consumerConstructor, [])
+  protected getInjections(Consumer: ConstructorUnknown): Injections {
+    if (!this.consumerConstructorToInjectionsMap.has(Consumer)) {
+      this.consumerConstructorToInjectionsMap.set(Consumer, [])
     }
 
-    return this.consumerConstructorToInjectionsMap.get(consumerConstructor)!
+    return this.consumerConstructorToInjectionsMap.get(Consumer)!
   }
 
   inject<
@@ -50,20 +50,17 @@ export class Context {
     ParameterIndex extends number,
     Dependency extends Dependencies[ParameterIndex],
   >(
-    consumerConstructor: ConstructorOf<object, Dependencies>,
+    Consumer: ConstructorOf<object, Dependencies>,
     parameterIndex: ParameterIndex,
     injection: ConstructorOf<Dependency, never>,
   ): this {
-    const consumer = consumerConstructor.name
-    const injected = injection.name
+    this.logger.log(`Injecting "${injection.name}" into "${Consumer.name}" at index ${parameterIndex} …`)
 
-    this.logger.log(`Injecting "${injected}" into "${consumer}" at index ${parameterIndex} …`)
-
-    const injections = this.getInjections(consumerConstructor)
+    const injections = this.getInjections(Consumer)
     const existingInjection = injections[parameterIndex]
 
     if (existingInjection) {
-      throw new Error(`Cannot inject "${injected}": consumer "${consumer}" already injects "${existingInjection.name}" at index ${parameterIndex}`)
+      throw new Error(`Cannot inject "${injection.name}": consumer "${Consumer.name}" already injects "${existingInjection.name}" at index ${parameterIndex}`)
     }
 
     injections[parameterIndex] = injection
@@ -75,22 +72,23 @@ export class Context {
     Instance extends object,
     Dependencies extends readonly object[],
   >(
-    originalConstructor: ConstructorOf<Instance, Dependencies>,
-    replacementConstructor: ConstructorOf<Instance, Dependencies>,
+    Instance: ConstructorOf<Instance, Dependencies>,
+    Replacement: ConstructorOf<Instance, Dependencies>,
   ): this {
-    this.logger.log(`Replacing "${originalConstructor.name}" with "${replacementConstructor.name}" …`)
+    this.logger.log(`Replacing "${Instance.name}" with "${Replacement.name}" …`)
 
-    const existingReplacementConstructor = this.replacements.get(originalConstructor)
+    const ExistingReplacement = this.replacements.get(Instance)
 
-    if (existingReplacementConstructor) {
-      throw new Error(`Cannot replace "${originalConstructor.name}": it is already replaced by "${existingReplacementConstructor.name}"`)
+    if (ExistingReplacement) {
+      throw new Error(`Cannot replace "${Instance.name}": it is already replaced by "${ExistingReplacement.name}"`)
     }
 
-    const injections = this.getInjections(originalConstructor)
+    this.register(Replacement)
+    this.replacements.set(Instance, Replacement)
 
-    this.consumerConstructorToInjectionsMap.set(replacementConstructor, injections)
-    this.register(replacementConstructor)
-    this.replacements.set(originalConstructor, replacementConstructor)
+    const injections = this.getInjections(Instance)
+
+    this.consumerConstructorToInjectionsMap.set(Replacement, injections)
 
     return this
   }
@@ -99,18 +97,18 @@ export class Context {
     Consumer extends object,
     Dependencies extends readonly object[],
   >(
-    consumerConstructor: ConstructorOf<Consumer, Dependencies>,
+    Consumer: ConstructorOf<Consumer, Dependencies>,
   ): Promise<Dependencies> {
-    this.logger.log(`Resolving dependencies for "${consumerConstructor.name}" …`)
+    this.logger.log(`Resolving dependencies for "${Consumer.name}" …`)
 
-    const injections = this.getInjections(consumerConstructor)
+    const injections = this.getInjections(Consumer)
     const dependencies: object[] = []
 
     // can't use Promise.all(…): need to resolve in order
     // can't use injections.map(…): need to iterate holes
     for (const [parameterIndex, injection] of injections.entries()) {
       if (!injection) {
-        throw new Error(`Cannot resolve dependencies: consumer "${consumerConstructor.name}" has no injection at parameter at index ${parameterIndex}`)
+        throw new Error(`Cannot resolve dependencies: consumer "${Consumer.name}" has no injection at parameter at index ${parameterIndex}`)
       }
 
       const dependency = await this.resolveInstance(injection)
@@ -125,32 +123,32 @@ export class Context {
     Instance extends object,
     Dependencies extends readonly object[],
   >(
-    instanceConstructor: ConstructorOf<Instance, Dependencies>,
+    Instance: ConstructorOf<Instance, Dependencies>,
   ): Promise<Instance> {
-    this.logger.log(`Resolving "${instanceConstructor.name}" …`)
+    this.logger.log(`Resolving "${Instance.name}" …`)
 
-    const replacementConstructor = this.replacements.get(instanceConstructor)
+    const Replacement = this.replacements.get(Instance)
 
-    if (replacementConstructor) {
-      this.logger.log(`Found a replacement for "${instanceConstructor.name}": "${replacementConstructor.name}"`)
+    if (Replacement) {
+      this.logger.log(`Found a replacement for "${Instance.name}": "${Replacement.name}"`)
 
-      instanceConstructor = replacementConstructor as ConstructorOf<Instance, Dependencies>
+      Instance = Replacement as ConstructorOf<Instance, Dependencies>
     }
 
-    if (!this.registry.hasObject(instanceConstructor)) {
-      const dependencies = await this.resolveDependencies(instanceConstructor)
+    if (!this.registry.hasObject(Instance)) {
+      const dependencies = await this.resolveDependencies(Instance)
 
-      this.logger.log(`Preparing instance of "${instanceConstructor.name}" …`)
+      this.logger.log(`Preparing instance of "${Instance.name}" …`)
 
-      await this.registry.prepareObject(instanceConstructor, dependencies)
+      await this.registry.prepareObject(Instance, dependencies)
     }
 
-    const instance = this.registry.getObject<Instance>(instanceConstructor)
+    const instance = this.registry.getObject<Instance>(Instance)
 
     return instance
   }
 
-  instantiate<Consumer extends object>(consumerConstructor: ConstructorOf<Consumer, never>): Promise<Consumer> {
-    return this.resolveInstance(consumerConstructor)
+  instantiate<Consumer extends object>(Consumer: ConstructorOf<Consumer, never>): Promise<Consumer> {
+    return this.resolveInstance(Consumer)
   }
 }

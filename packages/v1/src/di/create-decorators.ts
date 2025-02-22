@@ -37,8 +37,8 @@ export const createDecorators = (context: Context): ContextDecorators => ({
     context.inject(Consumer as ConsumerConstructor, parameterIndex, Dependency)
   },
 
-  async bootstrap(programConstructor) {
-    const program = await context.instantiate(programConstructor)
+  async bootstrap(Program) {
+    const program = await context.instantiate(Program)
 
     await program.run()
   },
