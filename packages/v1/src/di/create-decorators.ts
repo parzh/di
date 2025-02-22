@@ -1,7 +1,6 @@
-import { Context, ConstructorOf } from './context.js'
+import { Context, ConstructorOf, ConstructorUnknown } from './context.js'
 import { MaybePromise } from './maybe-promise.type.js'
 
-type ConstructorUnknown = ConstructorOf<object, never>
 type ConsumerConstructor = ConstructorOf<object, readonly object[]>
 
 export interface Program {

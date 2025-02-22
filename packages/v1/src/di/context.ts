@@ -12,7 +12,9 @@ export interface ConstructorOf<Consumer extends object, Dependencies extends rea
   new(...dependencies: Dependencies): Consumer
 }
 
-type InjectionUnknown = ConstructorOf<object, never>
+export type ConstructorUnknown = ConstructorOf<object, never>
+
+type Injections = readonly ConstructorUnknown[]
 
 export class Context {
   static #instanceCount = 0
@@ -20,12 +22,12 @@ export class Context {
 
   protected readonly id = Context.createId()
   protected readonly logger = new Logger(this.id)
-  protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorOf<object, never>, InjectionUnknown[]>()
-  protected readonly replacements = new ObjectRegistry()
+  protected readonly consumerConstructorToInjectionsMap = new Map<ConstructorUnknown, Injections>()
+  protected readonly replacements = new Map<ConstructorUnknown, ConstructorUnknown>()
 
   constructor(protected readonly registry = new ObjectRegistry()) { }
 
-  register(entityConstructor: ConstructorOf<object, never>): this {
+  register(entityConstructor: ConstructorUnknown): this {
     this.logger.log(`Registering "${entityConstructor.name}" …`)
 
     if (!this.registry.hasObjectCreator(entityConstructor)) {
@@ -35,7 +37,7 @@ export class Context {
     return this
   }
 
-  protected getInjections(consumerConstructor: ConstructorOf<object, never>): InjectionUnknown[] {
+  protected getInjections(consumerConstructor: ConstructorUnknown): Injections {
     if (!this.consumerConstructorToInjectionsMap.has(consumerConstructor)) {
       this.consumerConstructorToInjectionsMap.set(consumerConstructor, [])
     }
@@ -78,10 +80,17 @@ export class Context {
   ): this {
     this.logger.log(`Replacing "${originalConstructor.name}" with "${replacementConstructor.name}" …`)
 
-    this.replacements.addObjectCreator(originalConstructor, async (...dependencies) => new replacementConstructor(...dependencies as Dependencies))
+    const existingReplacementConstructor = this.replacements.get(originalConstructor)
+
+    if (existingReplacementConstructor) {
+      throw new Error(`Cannot replace "${originalConstructor.name}": it is already replaced by "${existingReplacementConstructor.name}"`)
+    }
 
     const injections = this.getInjections(originalConstructor)
+
     this.consumerConstructorToInjectionsMap.set(replacementConstructor, injections)
+    this.register(replacementConstructor)
+    this.replacements.set(originalConstructor, replacementConstructor)
 
     return this
   }
@@ -120,23 +129,23 @@ export class Context {
   ): Promise<Instance> {
     this.logger.log(`Resolving "${instanceConstructor.name}" …`)
 
-    let registry = this.registry
+    const replacementConstructor = this.replacements.get(instanceConstructor)
 
-    if (this.replacements.hasObjectCreator(instanceConstructor)) {
-      this.logger.log(`Found a replacement for "${instanceConstructor.name}"`)
+    if (replacementConstructor) {
+      this.logger.log(`Found a replacement for "${instanceConstructor.name}": "${replacementConstructor.name}"`)
 
-      registry = this.replacements
+      instanceConstructor = replacementConstructor as ConstructorOf<Instance, Dependencies>
     }
 
-    if (!registry.hasObject(instanceConstructor)) {
+    if (!this.registry.hasObject(instanceConstructor)) {
       const dependencies = await this.resolveDependencies(instanceConstructor)
 
       this.logger.log(`Preparing instance of "${instanceConstructor.name}" …`)
 
-      await registry.prepareObject(instanceConstructor, dependencies)
+      await this.registry.prepareObject(instanceConstructor, dependencies)
     }
 
-    const instance = registry.getObject<Instance>(instanceConstructor)
+    const instance = this.registry.getObject<Instance>(instanceConstructor)
 
     return instance
   }
