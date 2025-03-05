@@ -25,9 +25,11 @@ export class Context {
   registerConstructor(Entity: ConstructorUnknown): this {
     this.logger.log(`Registering "${Entity.name}" …`)
 
-    if (!this.registry.hasCreator(Entity)) {
-      this.registry.addCreator(Entity, async (...dependencies) => new Entity(...dependencies as never))
+    if (this.registry.hasCreator(Entity)) {
+      throw new Error(`Cannot register: "${Entity.name}" is already registered`)
     }
+
+    this.registry.addCreator(Entity, async (...dependencies) => new Entity(...dependencies as never))
 
     return this
   }
