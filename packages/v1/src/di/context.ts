@@ -1,5 +1,5 @@
 import { ConstructorUnknown, ConstructorOf } from './constructor-of.type.js'
-import { ObjectRegistry } from './object-registry.js'
+import { ValueRegistry } from './value-registry.js'
 
 class Logger {
   constructor(protected readonly id: number) { }
@@ -20,13 +20,13 @@ export class Context {
   protected readonly injections = new Map<ConstructorUnknown, Injections>()
   protected readonly replacements = new Map<ConstructorUnknown, ConstructorUnknown>()
 
-  constructor(protected readonly registry = new ObjectRegistry()) { }
+  constructor(protected readonly registry = new ValueRegistry()) { }
 
   registerConstructor(Entity: ConstructorUnknown): this {
     this.logger.log(`Registering "${Entity.name}" …`)
 
-    if (!this.registry.hasObjectCreator(Entity)) {
-      this.registry.addObjectCreator(Entity, async (...dependencies) => new Entity(...dependencies as never))
+    if (!this.registry.hasCreator(Entity)) {
+      this.registry.addCreator(Entity, async (...dependencies) => new Entity(...dependencies as never))
     }
 
     return this
@@ -128,15 +128,15 @@ export class Context {
       Instance = Replacement as ConstructorOf<Instance, Dependencies>
     }
 
-    if (!this.registry.hasObject(Instance)) {
+    if (!this.registry.has(Instance)) {
       const dependencies = await this.resolveDependencies(Instance)
 
       this.logger.log(`Preparing instance of "${Instance.name}" …`)
 
-      await this.registry.prepareObject(Instance, dependencies)
+      await this.registry.prepare(Instance, dependencies)
     }
 
-    const instance = this.registry.getObject<Instance>(Instance)
+    const instance = this.registry.get<Instance>(Instance)
 
     return instance
   }

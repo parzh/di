@@ -1,10 +1,10 @@
 import { ConstructorOf } from './constructor-of.type.js'
 import { Context } from './context.js'
 import { createDecorators } from './create-decorators.js'
-import { ObjectRegistry } from './object-registry.js'
+import { ValueRegistry } from './value-registry.js'
 
-const objectRegistry = new ObjectRegistry()
-const context = new Context(objectRegistry)
+const registry = new ValueRegistry()
+const context = new Context(registry)
 
 export const {
   Instance,
