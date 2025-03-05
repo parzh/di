@@ -1,11 +1,17 @@
-import { ConstructorOf, Context } from './context.js'
+import { ConstructorOf } from './constructor-of.type.js'
+import { Context } from './context.js'
 import { createDecorators } from './create-decorators.js'
 import { ObjectRegistry } from './object-registry.js'
 
 const objectRegistry = new ObjectRegistry()
 const context = new Context(objectRegistry)
 
-export const { Instance, Replacement, Singleton, bootstrap } = createDecorators(context)
+export const {
+  Instance,
+  Replacement,
+  Singleton,
+  bootstrap,
+} = createDecorators(context)
 
 // Since ESM does not allow exporting an object as a set of named exports,
 // here is a compile-time test for the consistency of the above exports:
